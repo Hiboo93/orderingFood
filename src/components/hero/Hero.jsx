@@ -1,7 +1,7 @@
 import React from 'react'
 import { AiOutlineSearch } from 'react-icons/ai'
 
-function Hero() {
+const Hero = () => {
   return (
     <div className='max-w-[1600px] mx-auto grid sm:grid-cols-2 sm:h-[500px] gap-4'>
       
