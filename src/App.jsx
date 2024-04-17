@@ -3,6 +3,7 @@ import Food from "./components/food/Food.jsx";
 import Navbar from "./components/header/Navbar.jsx";
 import Hero from "./components/hero/Hero.jsx";
 import Easy from "./components/easy/Easy.jsx";
+import Download from "./components/download/Download.jsx";
 
 export default function App() {
   const [isCartVisible, setCartVisible] = useState(false);
@@ -17,6 +18,7 @@ export default function App() {
       <Hero />
       <Food isCartVisible={isCartVisible}/>
       <Easy />
+      <Download />
     </>
   )
 }
