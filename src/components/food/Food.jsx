@@ -3,31 +3,33 @@ import { BsStarHalf, BsStarFill, BsCart } from 'react-icons/bs';
 import { products } from '../../product';
 
 const Food = ({ isCartVisible }) => {
-  const fromLocalStorage = JSON.stringify(localStorage.getItem('products'));
+  const fromLocalStorage = JSON.parse(localStorage.getItem('products'));
   const [cartItems, setCartItems] = useState(fromLocalStorage);
 
   if (!localStorage.getItem('products')) {
-    localStorage.setItem('products', JSON.parse({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0 }))
+    localStorage.setItem('products', JSON.stringify({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0 }))
   }
 
   useEffect(() => {
     localStorage.setItem('products', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (id) => {
+  function addToCart(id) {
     setCartItems(cartItems => ({ ...cartItems, [id]: cartItems[id] + 1 }));
   }
 
-  const removeFromCart = (id) => {
+  function removeFromCart(id) {
     setCartItems(cartItems => ({ ...cartItems, [id]: 0 }))
   }
 
-  const getTotalAmount = () => {
+  function getTotalAmount() {
     let totalAmount = 0;
     for (const key in cartItems) {
       if (cartItems[key] > 0) {
         let itemInfo = products.find(product => product.id === Number(key));
-        totalAmount += Math.floor(cartItems[key] * itemInfo.price);
+        if (itemInfo) {
+          totalAmount += Math.floor(cartItems[key] * itemInfo.price);
+        }
       }
     }
     return totalAmount;
@@ -38,7 +40,7 @@ const Food = ({ isCartVisible }) => {
       {
         isCartVisible && (
           <div className='z-10 fixed p-4 right-0 top-[80px] bg-primary-color w-96 h-screen overflow-y-scroll'>
-            <p className='text-2xl font-bold'>Your order: ${getTotalAmount()}</p>
+            <p className='text-2xl font-bold'>Your order: $ {getTotalAmount()}</p>
             {
               products.map((product) => {
                 if (cartItems[product.id] !== 0) {
@@ -62,7 +64,7 @@ const Food = ({ isCartVisible }) => {
       }
 
       <h2 className='text-3xl p-4 w-full text-start'>Food</h2>
-      <div className='grid lg:grid-cols-4 place-items-center gap-6'>
+      <div className='grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 place-items-center gap-6'>
         {
           products.map((product) => (
             <div key={product.id} className='w-[380px] p-5 bg-white rounded-lg glass transition-all duration-200 hover:scale-110'>
