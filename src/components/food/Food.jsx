@@ -1,27 +1,68 @@
 import React, { useEffect, useState } from 'react'
-import { BsStarHalf, BsStarFill, BsCart } from 'react-icons/bs';
 import { products } from '../../product';
+import { Card } from '../card/Card.jsx';
+
 
 const Food = ({ isCartVisible }) => {
-  const fromLocalStorage = JSON.parse(localStorage.getItem('products'));
+  const fromLocalStorage = JSON.parse(localStorage.getItem('products')) || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0 };
   const [cartItems, setCartItems] = useState(fromLocalStorage);
 
-  if (!localStorage.getItem('products')) {
-    localStorage.setItem('products', JSON.stringify({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0 }))
-  }
+  // Function to limit the size of localStorage
+  const cleanLocalStorage = () => {
+    try {
+      const storedCart = JSON.parse(localStorage.getItem('products'));
+      if (storedCart) {
+        // Only keep the cart if it contains products with quantities greater than 0
+        const cleanedCart = Object.keys(storedCart)
+          .filter(id => storedCart[id] > 0)
+          .reduce((obj, id) => {
+            obj[id] = storedCart[id];
+            return obj;
+          }, {});
 
+        // Save cleaned cart back to localStorage
+        localStorage.setItem('products', JSON.stringify(cleanedCart));
+      }
+    } catch (e) {
+      // Reset the localStorage if parsing fails
+      localStorage.setItem('products', JSON.stringify({}));
+    }
+  };
+
+  // On component mount, clean localStorage to avoid overflow
   useEffect(() => {
-    localStorage.setItem('products', JSON.stringify(cartItems));
+    cleanLocalStorage();
+  }, []);
+
+  // Sync cartItems with localStorage only if there are significant changes
+  useEffect(() => {
+    if (cartItems) {
+      try {
+        const currentSize = new Blob([JSON.stringify(cartItems)]).size;
+        const maxSize = 5000; // Set an arbitrary size limit (in bytes)
+        if (currentSize < maxSize) {
+          localStorage.setItem('products', JSON.stringify(cartItems));
+        } else {
+          alert("Storage limit reached! Reducing data saved in localStorage.");
+          cleanLocalStorage();
+        }
+      } catch (e) {
+        console.error("Error saving to localStorage: ", e);
+      }
+    }
   }, [cartItems]);
 
+  // Function to add an item to the cart
   function addToCart(id) {
     setCartItems(cartItems => ({ ...cartItems, [id]: cartItems[id] + 1 }));
   }
 
+  // Function to remove an item from the cart
   function removeFromCart(id) {
-    setCartItems(cartItems => ({ ...cartItems, [id]: 0 }))
+    setCartItems(cartItems => ({ ...cartItems, [id]: 0 }));
   }
 
+  // Calculate total amount for cart
   function getTotalAmount() {
     let totalAmount = 0;
     for (const key in cartItems) {
@@ -44,18 +85,31 @@ const Food = ({ isCartVisible }) => {
             {
               products.map((product) => {
                 if (cartItems[product.id] !== 0) {
-                  return <div key={product.id} className='glass my-3 grid grid-cols-5 overflow-hidden'>
-                    <img className='rounded-lg w-[100px] h-[100px] object-cover col-span-2' src={product.productImage}/>
-                    <div>
-                      <p className='text-xl font-bold pl-2'>{cartItems[product.id]} x</p>
-                      <p className='product-details flex items-center space-x-4 italic'>{product.productName} x</p>
-                      <p>${product.price} x</p>
-                    </div>
-
-                    <div className='absolute right-0 bottom-0 gap-2 font-bold'>
-                      <button onClick={() => removeFromCart(product.id)} className='text-red-600 bg-red-300 hover:bg-red-600 hover:text-red-100 p-2 rounded'>Remove</button>
-                    </div>
+                  return <div
+                  key={product.id}
+                  className="glass my-3 grid grid-cols-5 overflow-hidden"
+                >
+                  <img
+                    className="rounded-lg w-[100px] h-[100px] object-cover col-span-2"
+                    src={product.productImage}
+                  />
+                  <div>
+                    <p className="text-xl font-bold pl-2">{cartItems[product.id]} x</p>
+                    <p className="product-details flex items-center space-x-4 italic">
+                      {product.productName} x
+                    </p>
+                    <p>${product.price} x</p>
                   </div>
+            
+                  <div className="absolute right-0 bottom-0 gap-2 font-bold">
+                    <button
+                      onClick={() => removeFromCart(product.id)}
+                      className="text-red-600 bg-red-300 hover:bg-red-600 hover:text-red-100 p-2 rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
                 }
               })
             }
@@ -67,23 +121,8 @@ const Food = ({ isCartVisible }) => {
       <div className='grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 place-items-center gap-6'>
         {
           products.map((product) => (
-            <div key={product.id} className='w-[380px] p-5 bg-white rounded-lg glass transition-all duration-200 hover:scale-110'>
-              <img className='rounded-lg w-[400px] h-[220px] object-cover' src={product.productImage} alt='img'/>
-              <div className='flex flex-row justify-between items-center mt-5 gap-3'>
-                <h2 className='font-semibold text-xl'>{product.productName}</h2>
-                <div className='flex'>
-                  <BsStarFill className='text-brightColor'/>
-                  <BsStarFill className='text-brightColor'/>
-                  <BsStarFill className='text-brightColor'/>
-                  <BsStarFill className='text-brightColor'/>
-                  <BsStarHalf className='text-brightColor'/>
-                </div>
-                <h3 className='font-semibold text-lg'>${product.price}</h3>
-                <button onClick={() => {addToCart(product.id)}} className='p-3 text-2xl w-14 rounded-xl bg-orange-400 hover:bg-orange-800'><BsCart className='mx-auto'/></button>
-                {
-                  cartItems[product.id] > 0 && <div className='absolute flex items-center justify-center top-5 left-5 bg-green-600 font-bold rounded-lg h-12 w-12'>{cartItems[product.id]}</div>
-                }
-              </div>
+            <div key={product.id}>
+              <Card product={product} cartItems={cartItems} addToCart={addToCart}/>
             </div>
           ))
         }
